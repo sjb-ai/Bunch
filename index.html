@@ -6,16 +6,25 @@
   <title>Bunch — Social Feed</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: system-ui, sans-serif;
+      background-color: #e6ecf0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
       max-width: 600px;
       margin: 0 auto;
+      background: white;
+      min-height: 100vh;
       padding: 20px;
-      background: #fafafa;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+      color: #1da1f2;
+      font-size: 28px;
     }
 
     nav {
@@ -24,11 +33,11 @@
     }
 
     nav a {
-      margin: 0 15px;
+      margin: 0 10px;
       text-decoration: none;
-      color: #007bff;
-      font-weight: bold;
-      font-size: 1.1em;
+      color: #1da1f2;
+      font-weight: 500;
+      font-size: 1em;
     }
 
     nav a:hover {
@@ -37,71 +46,81 @@
 
     .post {
       display: flex;
-      gap: 15px;
-      align-items: flex-start;
-      background: white;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      flex-wrap: wrap;
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
     }
 
     .pfp {
-      width: 50px;
-      height: 50px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       object-fit: cover;
+      margin-right: 15px;
       flex-shrink: 0;
     }
 
     .post-content {
       flex: 1;
-      min-width: 0;
     }
 
     .username {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
+      font-weight: 600;
+      color: #14171a;
+      font-size: 16px;
     }
 
-    .post-content img.post-image {
-      max-width: 100%;
+    .text {
+      margin: 5px 0;
+      color: #0f1419;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .post-image {
+      width: 100%;
+      border-radius: 12px;
       margin-top: 10px;
-      border-radius: 8px;
-      display: block;
     }
 
     .post-actions {
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .post-actions button {
-      margin-right: 10px;
-      padding: 6px 10px;
-      font-size: 14px;
+      background: none;
       border: none;
-      border-radius: 6px;
+      color: #657786;
+      font-size: 14px;
+      margin-right: 15px;
       cursor: pointer;
-      background: #eee;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .post-actions button:hover {
+      background-color: #f5f8fa;
     }
 
     .post-actions button:disabled {
-      background: #ccc;
+      color: #ccc;
       cursor: not-allowed;
+    }
+
+    #posts {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>📢 Bunch — Feed</h1>
+  <div class="container">
+    <h1>🐦 Bunch Feed</h1>
 
-  <nav>
-    <a href="login.html">Login</a>
-    <a href="post.html">Make a Post</a>
-  </nav>
+    <nav>
+      <a href="post.html">➕ New Post</a>
+    </nav>
 
-  <div id="posts">Loading posts...</div>
+    <div id="posts">Loading posts...</div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -126,7 +145,7 @@
 
     function saveVote(postId, vote) {
       const votes = getVoteState();
-      votes[postId] = vote; // vote = "like" or "dislike"
+      votes[postId] = vote;
       localStorage.setItem("bunch_votes", JSON.stringify(votes));
     }
 
@@ -159,12 +178,12 @@
         postElement.innerHTML = `
           <img src="${pfpURL}" class="pfp" alt="Profile picture">
           <div class="post-content">
-            <span class="username">${username}</span>
-            <p>${text}</p>
+            <div class="username">${username}</div>
+            <div class="text">${text}</div>
             ${postImage ? `<img src="${postImage}" class="post-image" alt="Post image">` : ""}
             <div class="post-actions">
-              <button class="like-btn" ${vote === "like" ? "disabled" : ""}>👍 <span>${likes}</span></button>
-              <button class="dislike-btn" ${vote === "dislike" ? "disabled" : ""}>👎 <span>${dislikes}</span></button>
+              <button class="like-btn" ${vote === "like" ? "disabled" : ""}>👍 ${likes}</button>
+              <button class="dislike-btn" ${vote === "dislike" ? "disabled" : ""}>👎 ${dislikes}</button>
             </div>
           </div>
         `;

@@ -55,7 +55,7 @@
   <input type="text" id="user" placeholder="Your name" />
   <textarea id="text" rows="4" placeholder="What's on your mind?"></textarea>
   <input type="url" id="pfp" placeholder="Profile picture URL (optional)" />
-  <button onclick="submitPost()">Post</button>
+  <button id="submitBtn">Post</button>
   <div class="message" id="message"></div>
 
   <script type="module">
@@ -93,26 +93,24 @@
           pfp: pfp || ""
         });
 
-        // Show success message (optional)
         message.textContent = "✅ Post submitted! Redirecting...";
         message.style.color = "green";
 
-        // Clear input fields
         document.getElementById("user").value = "";
         document.getElementById("text").value = "";
         document.getElementById("pfp").value = "";
 
-        // Redirect to feed after short delay so user sees message
         setTimeout(() => {
           window.location.href = "index.html";
         }, 1500);
-
       } catch (error) {
         console.error("Error adding post:", error);
         message.textContent = "❌ Failed to submit post.";
         message.style.color = "red";
       }
     }
+
+    document.getElementById("submitBtn").addEventListener("click", submitPost);
   </script>
 </body>
 </html>

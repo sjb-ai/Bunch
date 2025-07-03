@@ -18,6 +18,23 @@
       margin-bottom: 30px;
     }
 
+    nav {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
     .post {
       display: flex;
       gap: 15px;
@@ -49,14 +66,18 @@
 </head>
 <body>
   <h1>📢 Bunch — Feed</h1>
+
+  <nav>
+    <a href="login.html">Login</a>
+    <a href="post.html">Make a Post</a>
+  </nav>
+
   <div id="posts">Loading posts...</div>
 
   <script type="module">
-    // Firebase CDN imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-    // Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCPseMZmg-vFfdQdP0TFyJGT_d9MNg48t0",
       authDomain: "bunch-fdb1b.firebaseapp.com",
@@ -67,11 +88,9 @@
       measurementId: "G-785YEYMQ93"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Load posts from Firestore
     async function loadPosts() {
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
@@ -88,7 +107,7 @@
         snapshot.forEach(doc => {
           const post = doc.data();
 
-          const pfpURL = post.pfp || "https://i.imgur.com/6VBx3io.png"; // default avatar
+          const pfpURL = post.pfp || "https://i.imgur.com/6VBx3io.png";
           const username = post.user || "Anonymous";
           const text = post.text || "";
 

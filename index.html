@@ -153,7 +153,11 @@
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
 
-      const snapshot = await getDocs(collection(db, "posts"));
+      import { query, orderBy } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+      const postsQuery = query(collection(db, "posts"), orderBy("likes", "desc"));
+      const snapshot = await getDocs(postsQuery);
+
       if (snapshot.empty) {
         postsContainer.innerText = "No posts yet.";
         return;

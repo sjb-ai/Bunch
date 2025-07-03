@@ -44,6 +44,7 @@
       margin-bottom: 15px;
       border-radius: 10px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      flex-wrap: wrap;
     }
 
     .pfp {
@@ -51,16 +52,44 @@
       height: 50px;
       border-radius: 50%;
       object-fit: cover;
+      flex-shrink: 0;
     }
 
     .post-content {
       flex: 1;
+      min-width: 0;
     }
 
     .username {
       font-weight: bold;
       display: block;
       margin-bottom: 5px;
+    }
+
+    .post-content img.post-image {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 8px;
+      display: block;
+    }
+
+    .post-actions {
+      margin-top: 10px;
+    }
+
+    .post-actions button {
+      margin-right: 10px;
+      padding: 6px 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #eee;
+    }
+
+    .post-actions button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -76,7 +105,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCPseMZmg-vFfdQdP0TFyJGT_d9MNg48t0",
@@ -91,42 +120,73 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    function getVoteState() {
+      return JSON.parse(localStorage.getItem("bunch_votes") || "{}");
+    }
+
+    function saveVote(postId, vote) {
+      const votes = getVoteState();
+      votes[postId] = vote; // vote = "like" or "dislike"
+      localStorage.setItem("bunch_votes", JSON.stringify(votes));
+    }
+
     async function loadPosts() {
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
 
-      try {
-        const postsCol = collection(db, "posts");
-        const snapshot = await getDocs(postsCol);
-
-        if (snapshot.empty) {
-          postsContainer.innerText = "No posts yet.";
-          return;
-        }
-
-        snapshot.forEach(doc => {
-          const post = doc.data();
-
-          const pfpURL = post.pfp || "https://i.imgur.com/6VBx3io.png";
-          const username = post.user || "Anonymous";
-          const text = post.text || "";
-
-          const postElement = document.createElement("div");
-          postElement.className = "post";
-          postElement.innerHTML = `
-            <img src="${pfpURL}" class="pfp" alt="Profile picture">
-            <div class="post-content">
-              <span class="username">${username}</span>
-              <p>${text}</p>
-            </div>
-          `;
-
-          postsContainer.appendChild(postElement);
-        });
-      } catch (err) {
-        postsContainer.innerText = "Failed to load posts.";
-        console.error("Error loading posts:", err);
+      const snapshot = await getDocs(collection(db, "posts"));
+      if (snapshot.empty) {
+        postsContainer.innerText = "No posts yet.";
+        return;
       }
+
+      const votes = getVoteState();
+
+      snapshot.forEach(docSnap => {
+        const post = docSnap.data();
+        const postId = docSnap.id;
+        const vote = votes[postId];
+
+        const pfpURL = post.pfp || "https://i.imgur.com/6VBx3io.png";
+        const username = post.user || "Anonymous";
+        const text = post.text || "";
+        const postImage = post.image || "";
+        const likes = post.likes || 0;
+        const dislikes = post.dislikes || 0;
+
+        const postElement = document.createElement("div");
+        postElement.className = "post";
+        postElement.innerHTML = `
+          <img src="${pfpURL}" class="pfp" alt="Profile picture">
+          <div class="post-content">
+            <span class="username">${username}</span>
+            <p>${text}</p>
+            ${postImage ? `<img src="${postImage}" class="post-image" alt="Post image">` : ""}
+            <div class="post-actions">
+              <button class="like-btn" ${vote === "like" ? "disabled" : ""}>👍 <span>${likes}</span></button>
+              <button class="dislike-btn" ${vote === "dislike" ? "disabled" : ""}>👎 <span>${dislikes}</span></button>
+            </div>
+          </div>
+        `;
+
+        const likeBtn = postElement.querySelector(".like-btn");
+        likeBtn.addEventListener("click", async () => {
+          if (vote) return;
+          await updateDoc(doc(db, "posts", postId), { likes: likes + 1 });
+          saveVote(postId, "like");
+          loadPosts();
+        });
+
+        const dislikeBtn = postElement.querySelector(".dislike-btn");
+        dislikeBtn.addEventListener("click", async () => {
+          if (vote) return;
+          await updateDoc(doc(db, "posts", postId), { dislikes: dislikes + 1 });
+          saveVote(postId, "dislike");
+          loadPosts();
+        });
+
+        postsContainer.appendChild(postElement);
+      });
     }
 
     loadPosts();

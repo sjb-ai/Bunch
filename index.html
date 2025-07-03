@@ -124,7 +124,15 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      doc,
+      updateDoc,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCPseMZmg-vFfdQdP0TFyJGT_d9MNg48t0",
@@ -152,8 +160,6 @@
     async function loadPosts() {
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
-
-      import { query, orderBy } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
       const postsQuery = query(collection(db, "posts"), orderBy("likes", "desc"));
       const snapshot = await getDocs(postsQuery);

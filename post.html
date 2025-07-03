@@ -55,12 +55,14 @@
   <input type="text" id="user" placeholder="Your name" />
   <textarea id="text" rows="4" placeholder="What's on your mind?"></textarea>
   <input type="url" id="pfp" placeholder="Profile picture URL (optional)" />
+  <input type="url" id="postImage" placeholder="Post image URL (optional)" />
   <button id="submitBtn">Post</button>
   <div class="message" id="message"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCPseMZmg-vFfdQdP0TFyJGT_d9MNg48t0",
@@ -74,15 +76,52 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const message = document.getElementById("message");
+    const userInput = document.getElementById("user");
+    const pfpInput = document.getElementById("pfp");
+
+    let currentUserProfile = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User signed in — get profile data
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          currentUserProfile = userDocSnap.data();
+          userInput.value = currentUserProfile.displayName || "";
+          pfpInput.value = currentUserProfile.profilePic || "";
+          userInput.disabled = true;
+          pfpInput.disabled = true;
+        } else {
+          currentUserProfile = null;
+          userInput.disabled = false;
+          pfpInput.disabled = false;
+        }
+      } else {
+        currentUserProfile = null;
+        userInput.disabled = false;
+        pfpInput.disabled = false;
+      }
+    });
 
     async function submitPost() {
-      const user = document.getElementById("user").value.trim();
       const text = document.getElementById("text").value.trim();
-      const pfp = document.getElementById("pfp").value.trim();
-      const message = document.getElementById("message");
+      const postImage = document.getElementById("postImage").value.trim();
 
-      if (!user || !text) {
-        alert("Please enter your name and post text.");
+      if (!text) {
+        alert("Please enter post text.");
+        return;
+      }
+
+      const user = currentUserProfile?.displayName || userInput.value.trim();
+      const pfp = currentUserProfile?.profilePic || pfpInput.value.trim();
+
+      if (!user) {
+        alert("Please enter your name.");
         return;
       }
 
@@ -90,15 +129,19 @@
         await addDoc(collection(db, "posts"), {
           user,
           text,
-          pfp: pfp || ""
+          pfp: pfp || "",
+          image: postImage || ""
         });
 
         message.textContent = "✅ Post submitted! Redirecting...";
         message.style.color = "green";
 
-        document.getElementById("user").value = "";
         document.getElementById("text").value = "";
-        document.getElementById("pfp").value = "";
+        document.getElementById("postImage").value = "";
+        if (!currentUserProfile) {
+          userInput.value = "";
+          pfpInput.value = "";
+        }
 
         setTimeout(() => {
           window.location.href = "index.html";

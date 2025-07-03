@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bunch — Social Feed</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fafafa;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .post {
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .pfp {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .post-content {
+      flex: 1;
+    }
+
+    .username {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📢 Bunch — Feed</h1>
+  <div id="posts">Loading posts...</div>
+
+  <script type="module">
+    // Firebase CDN imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPseMZmg-vFfdQdP0TFyJGT_d9MNg48t0",
+      authDomain: "bunch-fdb1b.firebaseapp.com",
+      projectId: "bunch-fdb1b",
+      storageBucket: "bunch-fdb1b.firebasestorage.app",
+      messagingSenderId: "97188801759",
+      appId: "1:97188801759:web:7098a62e47f200bcb54d6a",
+      measurementId: "G-785YEYMQ93"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Load posts from Firestore
+    async function loadPosts() {
+      const postsContainer = document.getElementById("posts");
+      postsContainer.innerHTML = "";
+
+      try {
+        const postsCol = collection(db, "posts");
+        const snapshot = await getDocs(postsCol);
+
+        if (snapshot.empty) {
+          postsContainer.innerText = "No posts yet.";
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const post = doc.data();
+
+          const pfpURL = post.pfp || "https://i.imgur.com/6VBx3io.png"; // default avatar
+          const username = post.user || "Anonymous";
+          const text = post.text || "";
+
+          const postElement = document.createElement("div");
+          postElement.className = "post";
+          postElement.innerHTML = `
+            <img src="${pfpURL}" class="pfp" alt="Profile picture">
+            <div class="post-content">
+              <span class="username">${username}</span>
+              <p>${text}</p>
+            </div>
+          `;
+
+          postsContainer.appendChild(postElement);
+        });
+      } catch (err) {
+        postsContainer.innerText = "Failed to load posts.";
+        console.error("Error loading posts:", err);
+      }
+    }
+
+    loadPosts();
+  </script>
+</body>
+</html>

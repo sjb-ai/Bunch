@@ -86,6 +86,7 @@
       try {
         await createUserWithEmailAndPassword(auth, email, password);
         alert("✅ Signed up successfully!");
+        window.location.href = "index.html";  // Redirect to feed
       } catch (error) {
         alert("❌ Error: " + error.message);
       }
@@ -98,6 +99,7 @@
       try {
         await signInWithEmailAndPassword(auth, email, password);
         alert("✅ Logged in successfully!");
+        window.location.href = "index.html";  // Redirect to feed
       } catch (error) {
         alert("❌ Error: " + error.message);
       }
@@ -110,6 +112,8 @@
     onAuthStateChanged(auth, user => {
       if (user) {
         statusEl.textContent = `Logged in as: ${user.email}`;
+        // Redirect to feed if already logged in
+        window.location.href = "index.html";
       } else {
         statusEl.textContent = "Not logged in.";
       }

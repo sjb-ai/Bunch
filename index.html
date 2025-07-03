@@ -161,7 +161,7 @@
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
 
-      const postsQuery = query(collection(db, "posts"), orderBy("likes", "desc"));
+      const postsQuery = query(collection(db, "posts"), orderBy("likes", "asc"));
       const snapshot = await getDocs(postsQuery);
 
       if (snapshot.empty) {
@@ -180,8 +180,8 @@
         const username = post.user || "Anonymous";
         const text = post.text || "";
         const postImage = post.image || "";
-        const likes = post.likes || 0;
-        const dislikes = post.dislikes || 0;
+        const likes = typeof post.likes === "number" ? post.likes : 0;
+        const dislikes = typeof post.dislikes === "number" ? post.dislikes : 0;
 
         const postElement = document.createElement("div");
         postElement.className = "post";

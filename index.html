@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bunch — Social Feed</title>
   <style>
-    /* [Same styles as your original post] */
     body {
       font-family: system-ui, sans-serif;
       background-color: #e6ecf0;
       margin: 0;
       padding: 0;
     }
+
     .container {
       max-width: 600px;
       margin: 0 auto;
@@ -19,31 +19,48 @@
       min-height: 100vh;
       padding: 20px;
     }
+
     h1 {
       text-align: center;
       margin-bottom: 20px;
       color: #1da1f2;
       font-size: 28px;
     }
+
     nav {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
+
     nav a {
       margin: 0 10px;
       text-decoration: none;
       color: #1da1f2;
       font-weight: 500;
-      font-size: 1em;
     }
+
     nav a:hover {
       text-decoration: underline;
     }
+
+    .sort-control {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    select {
+      padding: 6px 10px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
     .post {
       display: flex;
       padding: 15px 0;
       border-bottom: 1px solid #eee;
     }
+
     .pfp {
       width: 48px;
       height: 48px;
@@ -52,28 +69,31 @@
       margin-right: 15px;
       flex-shrink: 0;
     }
+
     .post-content {
       flex: 1;
     }
+
     .username {
       font-weight: 600;
       color: #14171a;
-      font-size: 16px;
     }
+
     .text {
       margin: 5px 0;
       color: #0f1419;
-      font-size: 15px;
-      line-height: 1.4;
     }
+
     .post-image {
       width: 100%;
       border-radius: 12px;
       margin-top: 10px;
     }
+
     .post-actions {
       margin-top: 8px;
     }
+
     .post-actions button {
       background: none;
       border: none;
@@ -84,13 +104,16 @@
       padding: 4px 8px;
       border-radius: 6px;
     }
+
     .post-actions button:hover {
       background-color: #f5f8fa;
     }
+
     .post-actions button:disabled {
       color: #ccc;
       cursor: not-allowed;
     }
+
     #posts {
       margin-top: 10px;
     }
@@ -103,6 +126,15 @@
     <nav>
       <a href="post.html">➕ New Post</a>
     </nav>
+
+    <div class="sort-control">
+      <label for="sort">Sort by:</label>
+      <select id="sort">
+        <option value="none">Default</option>
+        <option value="desc">Most Likes</option>
+        <option value="asc">Least Likes</option>
+      </select>
+    </div>
 
     <div id="posts">Loading posts...</div>
   </div>
@@ -132,6 +164,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    const sortSelect = document.getElementById("sort");
+    sortSelect.addEventListener("change", loadPosts);
+
     function getVoteState() {
       return JSON.parse(localStorage.getItem("bunch_votes") || "{}");
     }
@@ -144,63 +179,75 @@
 
     async function loadPosts() {
       const postsContainer = document.getElementById("posts");
-      postsContainer.innerHTML = "";
+      postsContainer.innerHTML = "Loading...";
 
-      const postsQuery = query(collection(db, "posts"), orderBy("likes", "desc"));
-      const snapshot = await getDocs(postsQuery);
+      let postsQuery;
+      const sortValue = sortSelect.value;
 
-      if (snapshot.empty) {
-        postsContainer.innerText = "No posts yet.";
-        return;
+      if (sortValue === "desc") {
+        postsQuery = query(collection(db, "posts"), orderBy("likes", "desc"));
+      } else if (sortValue === "asc") {
+        postsQuery = query(collection(db, "posts"), orderBy("likes", "asc"));
+      } else {
+        postsQuery = collection(db, "posts"); // default — no sort
       }
 
-      const votes = getVoteState();
+      try {
+        const snapshot = await getDocs(postsQuery);
+        postsContainer.innerHTML = "";
 
-      snapshot.forEach(docSnap => {
-        const post = docSnap.data();
-        const postId = docSnap.id;
-        const vote = votes[postId];
+        const votes = getVoteState();
 
-        const pfpURL = post.pfp || "https://i.imgur.com/6VBx3io.png";
-        const username = post.user || "Anonymous";
-        const text = post.text || "";
-        const postImage = post.image || "";
-        const likes = typeof post.likes === "number" ? post.likes : 0;
-        const dislikes = typeof post.dislikes === "number" ? post.dislikes : 0;
+        snapshot.forEach(docSnap => {
+          const post = docSnap.data();
+          const postId = docSnap.id;
+          const vote = votes[postId];
 
-        const postElement = document.createElement("div");
-        postElement.className = "post";
-        postElement.innerHTML = `
-          <img src="${pfpURL}" class="pfp" alt="Profile picture">
-          <div class="post-content">
-            <div class="username">${username}</div>
-            <div class="text">${text}</div>
-            ${postImage ? `<img src="${postImage}" class="post-image" alt="Post image">` : ""}
-            <div class="post-actions">
-              <button class="like-btn" ${vote === "like" ? "disabled" : ""}>👍 ${likes}</button>
-              <button class="dislike-btn" ${vote === "dislike" ? "disabled" : ""}>👎 ${dislikes}</button>
+          const pfpURL = post.pfp || "https://i.imgur.com/6VBx3io.png";
+          const username = post.user || "Anonymous";
+          const text = post.text || "";
+          const postImage = post.image || "";
+          const likes = typeof post.likes === "number" ? post.likes : 0;
+          const dislikes = typeof post.dislikes === "number" ? post.dislikes : 0;
+
+          const postElement = document.createElement("div");
+          postElement.className = "post";
+          postElement.innerHTML = `
+            <img src="${pfpURL}" class="pfp" alt="Profile picture">
+            <div class="post-content">
+              <div class="username">${username}</div>
+              <div class="text">${text}</div>
+              ${postImage ? `<img src="${postImage}" class="post-image" alt="Post image">` : ""}
+              <div class="post-actions">
+                <button class="like-btn" ${vote === "like" ? "disabled" : ""}>👍 ${likes}</button>
+                <button class="dislike-btn" ${vote === "dislike" ? "disabled" : ""}>👎 ${dislikes}</button>
+              </div>
             </div>
-          </div>
-        `;
+          `;
 
-        const likeBtn = postElement.querySelector(".like-btn");
-        likeBtn.addEventListener("click", async () => {
-          if (vote) return;
-          await updateDoc(doc(db, "posts", postId), { likes: likes + 1 });
-          saveVote(postId, "like");
-          loadPosts();
+          const likeBtn = postElement.querySelector(".like-btn");
+          likeBtn.addEventListener("click", async () => {
+            if (vote) return;
+            await updateDoc(doc(db, "posts", postId), { likes: likes + 1 });
+            saveVote(postId, "like");
+            loadPosts();
+          });
+
+          const dislikeBtn = postElement.querySelector(".dislike-btn");
+          dislikeBtn.addEventListener("click", async () => {
+            if (vote) return;
+            await updateDoc(doc(db, "posts", postId), { dislikes: dislikes + 1 });
+            saveVote(postId, "dislike");
+            loadPosts();
+          });
+
+          postsContainer.appendChild(postElement);
         });
 
-        const dislikeBtn = postElement.querySelector(".dislike-btn");
-        dislikeBtn.addEventListener("click", async () => {
-          if (vote) return;
-          await updateDoc(doc(db, "posts", postId), { dislikes: dislikes + 1 });
-          saveVote(postId, "dislike");
-          loadPosts();
-        });
-
-        postsContainer.appendChild(postElement);
-      });
+      } catch (err) {
+        postsContainer.innerText = "Failed to load posts.";
+        console.error("Error loading posts:", err);
+      }
     }
 
     loadPosts();

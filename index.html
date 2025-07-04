@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bunch — Social Feed</title>
   <style>
+    /* [Same styles as your original post] */
     body {
       font-family: system-ui, sans-serif;
       background-color: #e6ecf0;
       margin: 0;
       padding: 0;
     }
-
     .container {
       max-width: 600px;
       margin: 0 auto;
@@ -19,19 +19,16 @@
       min-height: 100vh;
       padding: 20px;
     }
-
     h1 {
       text-align: center;
       margin-bottom: 20px;
       color: #1da1f2;
       font-size: 28px;
     }
-
     nav {
       text-align: center;
       margin-bottom: 20px;
     }
-
     nav a {
       margin: 0 10px;
       text-decoration: none;
@@ -39,17 +36,14 @@
       font-weight: 500;
       font-size: 1em;
     }
-
     nav a:hover {
       text-decoration: underline;
     }
-
     .post {
       display: flex;
       padding: 15px 0;
       border-bottom: 1px solid #eee;
     }
-
     .pfp {
       width: 48px;
       height: 48px;
@@ -58,34 +52,28 @@
       margin-right: 15px;
       flex-shrink: 0;
     }
-
     .post-content {
       flex: 1;
     }
-
     .username {
       font-weight: 600;
       color: #14171a;
       font-size: 16px;
     }
-
     .text {
       margin: 5px 0;
       color: #0f1419;
       font-size: 15px;
       line-height: 1.4;
     }
-
     .post-image {
       width: 100%;
       border-radius: 12px;
       margin-top: 10px;
     }
-
     .post-actions {
       margin-top: 8px;
     }
-
     .post-actions button {
       background: none;
       border: none;
@@ -96,16 +84,13 @@
       padding: 4px 8px;
       border-radius: 6px;
     }
-
     .post-actions button:hover {
       background-color: #f5f8fa;
     }
-
     .post-actions button:disabled {
       color: #ccc;
       cursor: not-allowed;
     }
-
     #posts {
       margin-top: 10px;
     }
@@ -124,7 +109,15 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      doc,
+      updateDoc,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCPseMZmg-vFfdQdP0TFyJGT_d9MNg48t0",
@@ -153,8 +146,6 @@
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
 
-      import { query, orderBy } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
       const postsQuery = query(collection(db, "posts"), orderBy("likes", "desc"));
       const snapshot = await getDocs(postsQuery);
 
@@ -174,8 +165,8 @@
         const username = post.user || "Anonymous";
         const text = post.text || "";
         const postImage = post.image || "";
-        const likes = post.likes || 0;
-        const dislikes = post.dislikes || 0;
+        const likes = typeof post.likes === "number" ? post.likes : 0;
+        const dislikes = typeof post.dislikes === "number" ? post.dislikes : 0;
 
         const postElement = document.createElement("div");
         postElement.className = "post";

@@ -124,15 +124,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      doc,
-      updateDoc,
-      query,
-      orderBy
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCPseMZmg-vFfdQdP0TFyJGT_d9MNg48t0",
@@ -161,7 +153,9 @@
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = "";
 
-      const postsQuery = query(collection(db, "posts"), orderBy("likes", "asc"));
+      import { query, orderBy } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+      const postsQuery = query(collection(db, "posts"), orderBy("likes", "desc"));
       const snapshot = await getDocs(postsQuery);
 
       if (snapshot.empty) {
@@ -180,8 +174,8 @@
         const username = post.user || "Anonymous";
         const text = post.text || "";
         const postImage = post.image || "";
-        const likes = typeof post.likes === "number" ? post.likes : 0;
-        const dislikes = typeof post.dislikes === "number" ? post.dislikes : 0;
+        const likes = post.likes || 0;
+        const dislikes = post.dislikes || 0;
 
         const postElement = document.createElement("div");
         postElement.className = "post";
